@@ -341,7 +341,7 @@ export default function LiquidResponsiveSplashForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('https://businessform-2v60.onrender.com/submissions', {
+      const response = await fetch('https://businessform-2v60.onrender.com/api/submissions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
