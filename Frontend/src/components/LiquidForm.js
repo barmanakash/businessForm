@@ -386,10 +386,10 @@ export default function LiquidResponsiveSplashForm() {
 
       <SplashCard component="form" onSubmit={handleSubmit} currenttheme={currentTheme}>
         <Typography variant="h5" sx={{ fontWeight: 800, color: currentTheme.text, mb: 0.5, letterSpacing: '-0.5px', fontFamily: 'system-ui', fontSize: '1.3rem' }}>
-          {currentTheme.name === 'Liquid Splash' ? 'Searchralism UI' : 'Sunset Splash'}
+          {currentTheme.name === 'Liquid Splash' ? 'Order Custom Web Application & Desktop Software Development' : 'Order Custom Web Application & Desktop Software Development'}
         </Typography>
         <Typography variant="body2" sx={{ color: currentTheme.name.includes('Liquid') ? '#4A5D6B' : '#BCACCD', mb: 4, fontWeight: 500, fontSize: '0.82rem' }}>
-          Fluid organic water-molded elements
+          Please fill out the form below for your order.
         </Typography>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4.5 }}>
