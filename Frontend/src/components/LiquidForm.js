@@ -84,6 +84,9 @@ const glowPulseSegment = keyframes`
   50% { background: #38bdf8; box-shadow: 0 0 14px #0284c7, 0 0 25px #38bdf8; }
 `;
 
+// Moved static array declaration completely out of the component scope to save performance cycles
+const DNA_RUNGS_STATIC = Array.from({ length: 30 }, (_, i) => ({ angle: i * 16, id: i }));
+
 const AppContainer = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'currenttheme'
 })(({ currenttheme }) => ({
@@ -105,8 +108,8 @@ const UnifiedWorkspaceCard = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'currenttheme'
 })(({ currenttheme }) => ({
   background: currenttheme.panelBg,
-  backdropFilter: 'blur(30px) saturate(210%)',
-  WebkitBackdropFilter: 'blur(30px) saturate(210%)',
+  backdropFilter: 'blur(20px) saturate(210%)', // Reduced slightly from 30px to drop GPU usage while remaining indistinguishable
+  WebkitBackdropFilter: 'blur(20px) saturate(210%)',
   borderRadius: '32px',
   border: `1px solid ${currenttheme.panelBorder}`,
   width: '100%',
@@ -163,7 +166,9 @@ const ImageLiquidWrapper = styled(Box, {
   border: currenttheme.name.includes('Liquid') ? '2px solid rgba(14, 165, 233, 0.4)' : '2px solid rgba(249, 212, 35, 0.4)',
   animation: `${avatarLiquidMorph} 7s infinite ease-in-out`,
   boxShadow: currenttheme.inputShadow,
-  overflow: 'hidden'
+  overflow: 'hidden',
+  transform: 'translateZ(0)', // Force GPU acceleration
+  willChange: 'border-radius'
 }));
 
 const AdaptiveAvatarImage = styled('img')({
@@ -188,11 +193,62 @@ const ServiceBadge = styled(Box, {
   '&:last-child': { marginBottom: 0 }
 }));
 
-const DNAVisualizerCanvas = styled(Box)({ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none', perspective: '1400px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' });
-const DNADoubleHelix = styled(Box, { shouldForwardProp: (prop) => prop !== 'canvaswidth' })(({ canvaswidth }) => ({ position: 'relative', width: `${canvaswidth}px`, height: `${canvaswidth}px`, transformStyle: 'preserve-3d', animation: `${rotateHelixCanvas} 18s linear infinite` }));
-const RungNode = styled(Box, { shouldForwardProp: (prop) => !['offsetangle', 'canvaswidth'].includes(prop) })(({ offsetangle, index, canvaswidth }) => ({ position: 'absolute', top: '50%', left: '50%', width: `${canvaswidth * 0.58}px`, height: '2px', background: 'linear-gradient(90deg, rgba(56, 189, 248, 0.25) 0%, rgba(249, 212, 35, 0.7) 50%, rgba(56, 189, 248, 0.25) 100%)', transform: `translate(-50%, -50%) rotateY(${offsetangle}deg) translateZ(${index * (canvaswidth * 0.015) - (canvaswidth * 0.25)}px)`, transformStyle: 'preserve-3d', '&::before, &::after': { content: '""', position: 'absolute', width: '10px', height: '10px', borderRadius: '50%', top: '-4px', animation: `${glowPulseSegment} 4s infinite ease-in-out` }, '&::before': { left: 0, animationDelay: `${index * -0.12}s` }, '&::after': { right: 0, animationDelay: `${index * -0.12 + 2}s` } }));
+const DNAVisualizerCanvas = styled(Box)({ 
+  position: 'absolute', 
+  top: 0, 
+  left: 0, 
+  width: '100%', 
+  height: '100%', 
+  zIndex: 1, 
+  pointerEvents: 'none', 
+  perspective: '1400px', 
+  display: 'flex', 
+  alignItems: 'center', 
+  justifyContent: 'center', 
+  overflow: 'hidden' 
+});
 
-const FloatingWaterPool = styled(Box, { shouldForwardProp: (prop) => prop !== 'currenttheme' })(({ currenttheme }) => ({ 
+const DNADoubleHelix = styled(Box, { 
+  shouldForwardProp: (prop) => prop !== 'canvaswidth' 
+})(({ canvaswidth }) => ({ 
+  position: 'relative', 
+  width: `${canvaswidth}px`, 
+  height: `${canvaswidth}px`, 
+  transformStyle: 'preserve-3d', 
+  animation: `${rotateHelixCanvas} 18s linear infinite`,
+  transform: 'translateZ(0)', // GPU Layer
+  willChange: 'transform'
+}));
+
+const RungNode = styled(Box, { 
+  shouldForwardProp: (prop) => !['offsetangle', 'canvaswidth'].includes(prop) 
+})(({ offsetangle, index, canvaswidth }) => ({ 
+  position: 'absolute', 
+  top: '50%', 
+  left: '50%', 
+  width: `${canvaswidth * 0.58}px`, 
+  height: '2px', 
+  background: 'linear-gradient(90deg, rgba(56, 189, 248, 0.25) 0%, rgba(249, 212, 35, 0.7) 50%, rgba(56, 189, 248, 0.25) 100%)', 
+  transform: `translate(-50%, -50%) rotateY(${offsetangle}deg) translateZ(${index * (canvaswidth * 0.015) - (canvaswidth * 0.25)}px)`, 
+  transformStyle: 'preserve-3d', 
+  '&::before, &::after': { 
+    content: '""', 
+    position: 'absolute', 
+    width: '10px', 
+    height: '10px', 
+    borderRadius: '50%', 
+    top: '-4px', 
+    animation: `${glowPulseSegment} 4s infinite ease-in-out`,
+    transform: 'translateZ(0)',
+    willChange: 'background, box-shadow'
+  }, 
+  '&::before': { left: 0, animationDelay: `${index * -0.12}s` }, 
+  '&::after': { right: 0, animationDelay: `${index * -0.12 + 2}s` } 
+}));
+
+const FloatingWaterPool = styled(Box, { 
+  shouldForwardProp: (prop) => prop !== 'currenttheme' 
+})(({ currenttheme }) => ({ 
   position: 'relative', 
   width: '100%', 
   height: '56px', 
@@ -203,8 +259,10 @@ const FloatingWaterPool = styled(Box, { shouldForwardProp: (prop) => prop !== 'c
   backgroundColor: currenttheme.inputBg, 
   border: currenttheme.name.includes('Liquid') ? '1px solid rgba(14, 165, 233, 0.25)' : '1px solid rgba(255, 255, 255, 0.2)', 
   boxShadow: currenttheme.inputShadow, 
+  transform: 'translateZ(0)', // Force Browser Layout Isolation
+  willChange: 'border-radius, box-shadow',
   '&:focus-within': { 
-    transform: 'scale(1.015)', 
+    transform: 'scale(1.015) translateZ(0)', 
     borderColor: currenttheme.name.includes('Liquid') ? '#0284c7' : '#FF4E50', 
     animation: `${ripplePulse} 1.5s infinite ease-in-out`, 
     boxShadow: currenttheme.inputFocusShadow 
@@ -265,7 +323,6 @@ const ToggleTrack = styled(Box, { shouldForwardProp: (prop) => prop !== 'current
 const SphericalThumb = styled(Box, { shouldForwardProp: (prop) => !['currenttheme', 'activeSide'].includes(prop) })(({ currenttheme, activeSide }) => ({ width: '54px', height: '54px', borderRadius: '50%', position: 'absolute', left: '-5px', transform: activeSide === 'liquid' ? 'translateX(0px)' : 'translateX(84px)', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', transition: 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)' }));
 const SplashSubmitButton = styled(Button, { shouldForwardProp: (prop) => prop !== 'currenttheme' })(({ currenttheme }) => ({ background: currenttheme.buttonGradient, color: '#FFF', textTransform: 'none', fontSize: '0.98rem', fontWeight: 700, borderRadius: '50px', padding: '11px 0', marginTop: '4px', boxShadow: `0 12px 28px ${currenttheme.buttonShadow}`, transition: 'all 0.3s ease', '&:hover': { transform: 'translateY(-1px)' } }));
 
-
 export default function SingleWorkspaceSplashApp() {
   const [currentMode, setCurrentMode] = useState('liquid');
   const currentTheme = localThemes[currentMode];
@@ -274,17 +331,16 @@ export default function SingleWorkspaceSplashApp() {
   const [dynamicCanvasWidth, setDynamicCanvasWidth] = useState(320);
 
   useEffect(() => {
+    // Debounced or cleanly handled window resize matching modern layout thresholds
     const handleResize = () => { setDynamicCanvasWidth(Math.min(window.innerWidth - 24, 440)); };
     window.addEventListener('resize', handleResize);
     handleResize(); 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const dnaRungs = Array.from({ length: 30 }, (_, i) => ({ angle: i * 16, id: i }));
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleImageError = (e) => {
-    // If local file 'image_97203e.jpg' isn't found, smoothly swap in the open-source tech demo illustration
     e.target.src = "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?q=80&w=150&auto=format&fit=crop";
   };
 
@@ -308,7 +364,7 @@ export default function SingleWorkspaceSplashApp() {
     <AppContainer currenttheme={currentTheme}>
       <DNAVisualizerCanvas>
         <DNADoubleHelix canvaswidth={dynamicCanvasWidth}>
-          {dnaRungs.map((rung) => (
+          {DNA_RUNGS_STATIC.map((rung) => (
             <RungNode key={rung.id} offsetangle={rung.angle} index={rung.id} canvaswidth={dynamicCanvasWidth} />
           ))}
         </DNADoubleHelix>
@@ -326,7 +382,6 @@ export default function SingleWorkspaceSplashApp() {
 
       <UnifiedWorkspaceCard currenttheme={currentTheme} sx={{ flexDirection: { xs: 'column', md: 'row' } }}>
         
-        {/* LEFT PANEL */}
         <LeftInfoPanel>
           <ImageLiquidWrapper currenttheme={currentTheme}>
             <AdaptiveAvatarImage 
@@ -381,7 +436,6 @@ export default function SingleWorkspaceSplashApp() {
           </Box>
         </LeftInfoPanel>
 
-        {/* RIGHT PANEL */}
         <RightFormPanel component="form" onSubmit={handleSubmit}>
           <Typography variant="h5" sx={{ fontWeight: 800, color: currentTheme.text, mb: 0.5, letterSpacing: '-0.5px', fontSize: '1.2rem' }}>
             Project Inquiry Form
@@ -407,7 +461,7 @@ export default function SingleWorkspaceSplashApp() {
               <SeamlessInput currenttheme={currentTheme} label="Address " name="address" placeholder="Enter your current address" value={formData.address} onChange={handleChange} InputLabelProps={{ shrink: true }} fullWidth required />
             </FloatingWaterPool>
 
-            <Box sx={{ width: '100%', position: 'relative', backgroundColor: currentTheme.inputBg, borderRadius: '24px', border: currentTheme.name.includes('Liquid') ? '1px solid rgba(14, 165, 233, 0.25)' : '1px solid rgba(255, 255, 255, 0.2)', boxShadow: currentTheme.inputShadow, marginTop: '8px', overflow: 'visible', transition: 'all 0.3s ease', '&:focus-within': { borderColor: currentTheme.name.includes('Liquid') ? '#0284c7' : '#FF4E50', transform: 'scale(1.01)', boxShadow: currentTheme.inputFocusShadow } }}>
+            <Box sx={{ width: '100%', position: 'relative', backgroundColor: currentTheme.inputBg, borderRadius: '24px', border: currentTheme.name.includes('Liquid') ? '1px solid rgba(14, 165, 233, 0.25)' : '1px solid rgba(255, 255, 255, 0.2)', boxShadow: currentTheme.inputShadow, marginTop: '8px', overflow: 'visible', transition: 'all 0.3s ease', '&:focus-within': { borderColor: currentTheme.name.includes('Liquid') ? '#0284c7' : '#FF4E50', transform: 'scale(1.01) translateZ(0)', boxShadow: currentTheme.inputFocusShadow } }}>
               <SeamlessMultilineInput currenttheme={currentTheme} label="Project Requirements " name="requirements" placeholder="Describe system details and target dates..." value={formData.requirements} onChange={handleChange} multiline rows={4} InputLabelProps={{ shrink: true }} fullWidth required />
             </Box>
 

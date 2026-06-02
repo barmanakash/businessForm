@@ -1,4 +1,3 @@
-import './App.css';
 import LiquidForm from './components/LiquidForm';
 
 function App() {
